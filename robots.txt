@@ -1,0 +1,4 @@
+User-Agent: *
+Allow: /
+
+Sitemap: https://myopia-tracker.com/sitemap.xml
