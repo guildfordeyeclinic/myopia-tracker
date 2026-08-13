@@ -29,16 +29,16 @@ export function SiteHeader({
               Calculator
             </Link>
             <Link
-              href="/about"
-              className="font-medium text-teal-800 hover:underline"
-            >
-              About
-            </Link>
-            <Link
               href="/bennett"
               className="font-medium text-teal-800 hover:underline"
             >
               Bennett buffer
+            </Link>
+            <Link
+              href="/about"
+              className="font-medium text-teal-800 hover:underline"
+            >
+              About
             </Link>
           </nav>
         </div>
