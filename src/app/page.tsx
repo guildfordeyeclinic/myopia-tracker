@@ -1,69 +1,304 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useMemo, useState } from "react";
+import { BennettLensPower } from "@/components/BennettLensPower";
+import { InsightCards } from "@/components/InsightCards";
+import {
+  MeasurementForm,
+  type FormValues,
+} from "@/components/MeasurementForm";
+import { PercentileChart } from "@/components/PercentileChart";
+import { PrintSummary } from "@/components/PrintSummary";
+import { SiteFooter } from "@/components/SiteFooter";
+import { SiteHeader } from "@/components/SiteHeader";
+import { CLINIC_NAME, CLINIC_URL, getReference } from "@/data/references";
+import { meanKToRadiusMm } from "@/lib/al/alcr";
+import { analyzeMeasurement } from "@/lib/al/analyze";
+import type { AnalysisResult } from "@/lib/al/types";
+
+const emptyForm: FormValues = {
+  age: "",
+  sex: "male",
+  ethnicity: "east_asian",
+  alOd: "",
+  alOs: "",
+  crMode: "radius",
+  cornealOd: "",
+  cornealOs: "",
+  ltOd: "",
+  ltOs: "",
+};
+
+const demoForm: FormValues = {
+  age: "9.5",
+  sex: "male",
+  ethnicity: "east_asian",
+  alOd: "24.50",
+  alOs: "24.35",
+  crMode: "radius",
+  cornealOd: "7.80",
+  cornealOs: "7.78",
+  ltOd: "3.45",
+  ltOs: "3.42",
+};
+
+function str(v: string | undefined | null): string {
+  return (v ?? "").trim();
+}
+
+function parseOptionalCornea(
+  raw: string | undefined | null,
+  mode: "radius" | "k",
+  eye: string
+): number | undefined | { error: string } {
+  const t = str(raw);
+  if (t === "") return undefined;
+  const n = Number(t);
+  if (!Number.isFinite(n) || n <= 0) {
+    return { error: `${eye} corneal value looks invalid.` };
+  }
+  const radiusMm = mode === "k" ? meanKToRadiusMm(n) : n;
+  if (!Number.isFinite(radiusMm) || radiusMm < 6 || radiusMm > 10) {
+    return {
+      error: `${eye} corneal radius should be about 7–9 mm (or convert mean K correctly).`,
+    };
+  }
+  return radiusMm;
+}
+
+function parseOptionalLt(
+  raw: string | undefined | null,
+  eye: string
+): number | undefined | { error: string } {
+  const t = str(raw);
+  if (t === "") return undefined;
+  const n = Number(t);
+  if (!Number.isFinite(n) || n < 2 || n > 6) {
+    return { error: `${eye} lens thickness should be about 2–6 mm.` };
+  }
+  return n;
+}
+
+function parseForm(values: FormValues): AnalysisResult | { error: string } {
+  const age = Number(values.age);
+  const alOd = Number(values.alOd);
+  const alOs = Number(values.alOs);
+
+  if (!Number.isFinite(age) || age < 3 || age > 25) {
+    return { error: "Enter a valid age (years, 3–18 recommended)." };
+  }
+  if (!Number.isFinite(alOd) || alOd < 18 || alOd > 32) {
+    return { error: "Enter a valid right eye axial length (mm)." };
+  }
+  if (!Number.isFinite(alOs) || alOs < 18 || alOs > 32) {
+    return { error: "Enter a valid left eye axial length (mm)." };
+  }
+
+  const crOd = parseOptionalCornea(values.cornealOd, values.crMode ?? "radius", "OD");
+  if (crOd && typeof crOd === "object" && "error" in crOd) return crOd;
+  const crOs = parseOptionalCornea(values.cornealOs, values.crMode ?? "radius", "OS");
+  if (crOs && typeof crOs === "object" && "error" in crOs) return crOs;
+
+  const ltOd = parseOptionalLt(values.ltOd, "OD");
+  if (ltOd && typeof ltOd === "object" && "error" in ltOd) return ltOd;
+  const ltOs = parseOptionalLt(values.ltOs, "OS");
+  if (ltOs && typeof ltOs === "object" && "error" in ltOs) return ltOs;
+
+  return analyzeMeasurement({
+    age,
+    sex: values.sex,
+    ethnicity: values.ethnicity,
+    alOd,
+    alOs,
+    cornealRadiusOdMm: crOd as number | undefined,
+    cornealRadiusOsMm: crOs as number | undefined,
+    lensThicknessOdMm: ltOd as number | undefined,
+    lensThicknessOsMm: ltOs as number | undefined,
+  });
+}
+
+export default function HomePage() {
+  const [form, setForm] = useState<FormValues>(emptyForm);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const ref = useMemo(
+    () => getReference(form.ethnicity),
+    [form.ethnicity]
+  );
+
+  const run = (values: FormValues = form) => {
+    const out = parseForm(values);
+    if ("error" in out) {
+      setError(out.error);
+      setResult(null);
+      return;
+    }
+    setError(null);
+    setResult(out);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <SiteHeader />
+
+      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
+        <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
+          <aside className="no-print rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h2 className="mb-4 text-base font-semibold text-slate-900">
+              Enter measurement
+            </h2>
+            <MeasurementForm
+              values={form}
+              onChange={(next) => {
+                setForm(next);
+              }}
+              onSubmit={() => run()}
+              onDemo={() => {
+                setForm(demoForm);
+                run(demoForm);
+              }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {error && (
+              <p className="mt-3 text-sm text-red-700" role="alert">
+                {error}
+              </p>
+            )}
+          </aside>
+
+          <section className="space-y-4">
+            {/* Only this block is printed */}
+            <div className="print-sheet rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+              <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h2 className="print-sheet-title text-base font-semibold text-slate-900">
+                    Axial length percentile graph
+                  </h2>
+                  <p className="print-sheet-meta text-xs text-slate-500">
+                    {result
+                      ? `${ref.label} · ${result.input.sex === "male" ? "Male" : "Female"} · age ${result.ageClamped}`
+                      : "Enter values and click Show on graph"}
+                  </p>
+                </div>
+                {result && (
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="no-print rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Print graph
+                  </button>
+                )}
+              </div>
+
+              {result ? (
+                <>
+                  <PercentileChart
+                    age={result.ageClamped}
+                    sex={result.input.sex}
+                    ethnicity={result.input.ethnicity}
+                    alOd={result.input.alOd}
+                    alOs={result.input.alOs}
+                    untreatedOd={result.od.untreatedAlAt18}
+                    untreatedOs={result.os.untreatedAlAt18}
+                  />
+                  <PrintSummary result={result} />
+                </>
+              ) : (
+                <div className="no-print flex h-[360px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-500">
+                  Your OD / OS points will appear on the ethnicity- and
+                  sex-specific growth chart here.
+                </div>
+              )}
+            </div>
+
+            {result && (
+              <div className="print-insights-screen no-print">
+                <InsightCards result={result} />
+              </div>
+            )}
+          </section>
+        </div>
+
+        <div className="no-print mt-8">
+          <BennettLensPower />
+        </div>
+
+        <section className="no-print mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 leading-relaxed shadow-sm">
+          <h2 className="text-base font-semibold text-slate-900">
+            Sources & methods
+          </h2>
+          <ul className="mt-3 list-disc space-y-2 pl-5">
+            <li>
+              Clinical framing:{" "}
+              <a
+                className="text-teal-800 underline underline-offset-2 hover:text-teal-950"
+                href="https://bc.doctorsofoptometry.ca/news/axial-length-an-essential-for-myopia-management/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Poon N. Axial Length: An Essential for Myopia Management. BC
+                Doctors of Optometry.
+              </a>
+            </li>
+            <li>
+              European curves: Tideman JWL, et al. Axial length growth and the
+              risk of developing myopia in European children.{" "}
+              <em>Acta Ophthalmol.</em> 2018;96(3):301-309. (P25/P50/P75 anchors;
+              intermediate ages interpolated; outer percentiles estimated.)
+            </li>
+            <li>
+              East Asian curves: Sanz Diez P, et al. LMS parameters, percentile,
+              and Z-score growth curves for axial length in Chinese
+              schoolchildren in Wuhan. <em>Sci Rep.</em> 2022;12:4850. Ages 6–15
+              from published LMS tables; 16–18 lightly extended for display.
+            </li>
+            <li>
+              Also related: Diez et al. 2019 growth curves; He et al. 2023
+              Chinese AL/AL-CR percentiles; IMI clinical management guidelines.
+            </li>
+            <li>
+              Crystalline lens power:{" "}
+              <a
+                className="text-teal-800 underline underline-offset-2 hover:text-teal-950"
+                href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4646557/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Hernandez VM, et al. Calculation of crystalline lens power using
+                a modification of the Bennett method. Biomed Opt Express.
+                2015;6(11):4501–4515
+              </a>{" "}
+              (PMC4646557). Based on Bennett AG (1988); thin-lens position and{" "}
+              <em>b</em> coefficient per Eqs. 16–18.
+            </li>
+          </ul>
+          <p className="mt-3 text-xs text-slate-500">
+            Using the wrong ethnicity reference can under- or over-estimate
+            risk. Choose the chart that best matches the child&apos;s background
+            and discuss with a clinician. This site is provided for educational
+            use in association with{" "}
+            <a
+              href={CLINIC_URL}
+              className="text-teal-800 underline underline-offset-2"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {CLINIC_NAME}
+            </a>
+            .
+          </p>
+        </section>
+
+        <div className="no-print mt-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <strong>Not a diagnosis.</strong> This calculator plots published
+          population percentile charts for education and discussion with an
+          optometrist or ophthalmologist. It does not replace clinical care or
+          optical biometry interpretation.
         </div>
       </main>
+
+      <SiteFooter />
     </div>
   );
 }

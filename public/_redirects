@@ -1,0 +1,2 @@
+# Cloudflare Pages — SPA-style fallbacks not needed (static routes)
+# Ensure www and apex both work via Cloudflare DNS (see DEPLOY.md)
