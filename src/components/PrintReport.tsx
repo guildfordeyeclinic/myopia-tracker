@@ -103,7 +103,8 @@ function buildPrintDocument(result: AnalysisResult, svgMarkup: string) {
   <style>
     @page {
       size: letter portrait;
-      margin: 0.75in;
+      /* Dialog "Margins: None" ignores @page. Real inset is body padding. */
+      margin: 0;
     }
     * { box-sizing: border-box; }
     html, body {
@@ -112,6 +113,10 @@ function buildPrintDocument(result: AnalysisResult, svgMarkup: string) {
       background: #fff;
       color: #000;
       font-family: Arial, Helvetica, sans-serif;
+    }
+    /* Always inset — works even when the print dialog is set to Margins: None */
+    body {
+      padding: 0.7in;
     }
     .sheet { width: 100%; }
     h1 {
@@ -144,9 +149,10 @@ function buildPrintDocument(result: AnalysisResult, svgMarkup: string) {
     .eyes {
       display: table;
       width: 100%;
+      table-layout: fixed;
       border-collapse: separate;
       border-spacing: 10pt 0;
-      margin: 0 -5pt;
+      margin: 0;
     }
     .eye {
       display: table-cell;
