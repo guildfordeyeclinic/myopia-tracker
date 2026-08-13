@@ -97,9 +97,9 @@ function buildSex(
 
 export const europeanReference: ReferenceSet = {
   id: "european",
-  label: "European",
+  label: "Default",
   regionNote:
-    "Based on European children (Netherlands / UK cohorts in Tideman et al.). Intermediate ages interpolated from published anchors.",
+    "Default reference for all non–East Asian ethnicities. Based on European children (Netherlands / UK cohorts in Tideman et al.). Intermediate ages interpolated from published anchors.",
   source: "Tideman et al. 2018, European children (P25/P50/P75 anchors)",
   citation:
     "Tideman JWL, Polling JR, Vingerling JR, et al. Axial length growth and the risk of developing myopia in European children. Acta Ophthalmol. 2018;96(3):301-309.",

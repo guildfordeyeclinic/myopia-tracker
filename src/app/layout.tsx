@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     template: "%s | Myopia Management Tracker",
   },
   description:
-    "Myopia Management Tracker (myopia-tracker.com) — interactive, color-coded axial length percentile charts for the easiest AL-based myopia control tracking. European & East Asian references, LT/AL, Bennett lens power, print reports.",
+    "Myopia Management Tracker (myopia-tracker.com) — interactive, color-coded axial length percentile charts for the easiest AL-based myopia control tracking. Default (non–East Asian) & East Asian references, LT/AL, Bennett lens power, print reports.",
   keywords: [
     "myopia management tracker",
     "myopia-tracker.com",
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Myopia Management Tracker",
     description:
-      "Free AL percentile calculator for myopia management — European & East Asian references.",
+      "Free AL percentile calculator for myopia management — Default (non–East Asian) & East Asian references.",
   },
   robots: {
     index: true,

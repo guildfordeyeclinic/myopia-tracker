@@ -6,7 +6,7 @@ import { CLINIC_NAME, CLINIC_URL } from "@/data/references";
 
 const pageTitle = "About Myopia Management Tracker | Guildford Eye Clinic";
 const pageDescription =
-  "Myopia Management Tracker (myopia-tracker.com) is an interactive, color-coded axial length (AL) percentile tool — one of the easiest ways to track AL-based myopia control and myopia management. Ethnicity- and sex-specific charts (European and East Asian), LT/AL buffering, Bennett crystalline lens power, and print-friendly reports for optometrists.";
+  "Myopia Management Tracker (myopia-tracker.com) is an interactive, color-coded axial length (AL) percentile tool — one of the easiest ways to track AL-based myopia control and myopia management. Ethnicity- and sex-specific charts (Default for non–East Asian, and East Asian), LT/AL buffering, Bennett crystalline lens power, and print-friendly reports for optometrists.";
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -83,7 +83,7 @@ const jsonLd = {
       featureList: [
         "Interactive color-coded axial length percentile graph for myopia control",
         "Easiest method to track axial length–based myopia management visually",
-        "Ethnicity-specific axial length percentile charts (European and East Asian)",
+        "Ethnicity-specific axial length percentile charts (Default for non–East Asian, and East Asian)",
         "Sex-specific pediatric AL growth reference curves",
         "Delta vs age-matched median (P50)",
         "Illustrative untreated AL projection to age 18",
@@ -131,10 +131,10 @@ const jsonLd = {
         },
         {
           "@type": "Question",
-          name: "Why use separate European and East Asian axial length charts?",
+          name: "Why use separate Default and East Asian axial length charts?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Published growth charts differ by population. European references (e.g. Tideman et al.) and Chinese/East Asian schoolchildren references (e.g. Sanz Diez et al.) show different typical AL for the same age and sex. Using the wrong chart can under- or over-estimate relative risk.",
+            text: "Published growth charts differ by population. The Default chart (Tideman et al. European children) is used for all non–East Asian ethnicities. Chinese/East Asian schoolchildren references (e.g. Sanz Diez et al.) show different typical AL for the same age and sex. Using the wrong chart can under- or over-estimate relative risk.",
           },
         },
         {
@@ -306,15 +306,15 @@ export default function AboutPage() {
             Ethnicity-specific axial length charts
           </h2>
           <p className="mt-3 text-slate-700 leading-relaxed">
-            Mean axial length trajectories differ between European and East Asian
+            Mean axial length trajectories differ between East Asian and other
             pediatric populations. This tool lets you choose the reference that
             best matches the child:
           </p>
           <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700 leading-relaxed">
             <li>
-              <strong>European:</strong> Tideman et al. European children AL
-              growth percentiles (sex-specific anchors; intermediate ages
-              interpolated)
+              <strong>Default:</strong> for all non–East Asian ethnicities.
+              Tideman et al. European children AL growth percentiles
+              (sex-specific anchors; intermediate ages interpolated)
             </li>
             <li>
               <strong>East Asian (Chinese-reference):</strong> Sanz Diez et al.
@@ -423,7 +423,7 @@ export default function AboutPage() {
               <p className="mt-2 text-sm text-slate-700 leading-relaxed">
                 The tracker is interactive and color-coded. Instead of looking up
                 tables or tracing static PDFs, you enter AL and immediately see
-                where the eye sits on European or East Asian percentile bands—
+                where the eye sits on Default or East Asian percentile bands—
                 designed as a simple visual method for axial length–based myopia
                 management and parent education.
               </p>
@@ -459,7 +459,7 @@ export default function AboutPage() {
               <p className="mt-2 text-sm text-slate-700 leading-relaxed">
                 Myopia management tracker, myopia-tracker.com, pediatric axial
                 length percentile chart, myopia control AL growth curves,
-                European vs Asian axial length norms, LT/AL buffering, Bennett
+                Default vs East Asian axial length norms, LT/AL buffering, Bennett
                 lens power calculator, print-ready AL report for optometry.
               </p>
             </div>

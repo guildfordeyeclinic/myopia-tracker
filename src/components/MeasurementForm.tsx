@@ -87,7 +87,7 @@ export function MeasurementForm({ values, onChange, onSubmit, onDemo }: Props) {
         <div className="space-y-2">
           {(
             [
-              ["european", "European"],
+              ["european", "Default"],
               ["east_asian", "East Asian (Chinese-reference)"],
             ] as const
           ).map(([value, label]) => (
@@ -112,6 +112,10 @@ export function MeasurementForm({ values, onChange, onSubmit, onDemo }: Props) {
             </label>
           ))}
         </div>
+        <p className="mt-2 text-xs text-slate-500">
+          Default is for all non–East Asian ethnicities (Tideman European
+          reference).
+        </p>
       </fieldset>
 
       <div className="grid grid-cols-2 gap-3">
