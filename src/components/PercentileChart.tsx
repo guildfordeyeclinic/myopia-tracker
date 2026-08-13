@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import {
   Area,
   CartesianGrid,
@@ -13,8 +12,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { getSexCurves } from "@/data/references";
-import { sampleCurves } from "@/lib/al/interpolate";
+import {
+  Y_MAX,
+  Y_MIN,
+  buildPercentileSeries,
+  clampPlot,
+  toPlot,
+} from "@/lib/al/chartSeries";
 import { HIGH_MYOPIA_AL_MM } from "@/lib/al/project";
 import type { Ethnicity, Sex } from "@/lib/al/types";
 
@@ -27,10 +31,6 @@ interface Props {
   untreatedOd?: number;
   untreatedOs?: number;
 }
-
-/** Chart window — cut off empty space below 21 mm */
-const Y_MIN = 21;
-const Y_MAX = 28;
 
 /** Vibrant percentile bands (cool → warm) */
 const BAND_COLORS = {
@@ -176,14 +176,6 @@ function makeActiveDot(
   };
 }
 
-function toPlot(al: number) {
-  return al - Y_MIN;
-}
-
-function clampPlot(al: number) {
-  return Math.min(Y_MAX - Y_MIN, Math.max(0, toPlot(al)));
-}
-
 export function PercentileChart({
   age,
   sex,
@@ -193,57 +185,12 @@ export function PercentileChart({
   untreatedOd,
   untreatedOs,
 }: Props) {
-  const curves = getSexCurves(ethnicity, sex);
-  const chartAgeMin = Math.min(6, Math.floor(age));
-  const chartAgeMax = 18;
-  const samples = sampleCurves(curves.ages, chartAgeMin, chartAgeMax, 0.5);
-
-  const data = samples.map((s) => {
-    const { p5, p25, p50, p75, p90, p95 } = s.values;
-    const c5 = Math.max(p5, Y_MIN);
-    const c25 = Math.max(p25, Y_MIN);
-    const c50 = Math.max(p50, Y_MIN);
-    const c75 = Math.max(p75, Y_MIN);
-    const c90 = Math.max(p90, Y_MIN);
-    const c95 = Math.max(p95, Y_MIN);
-
-    return {
-      age: s.age,
-      band0: Math.max(0, c5 - Y_MIN),
-      band1: Math.max(0, c25 - c5),
-      band2: Math.max(0, c50 - c25),
-      band3: Math.max(0, c75 - c50),
-      band4: Math.max(0, c90 - c75),
-      band5: Math.max(0, c95 - c90),
-      band6: Math.max(0, Y_MAX - c95),
-      p5: toPlot(p5),
-      p25: toPlot(p25),
-      p50: toPlot(p50),
-      p75: toPlot(p75),
-      p90: toPlot(p90),
-      p95: toPlot(p95),
-      rawP5: p5,
-      rawP25: p25,
-      rawP50: p50,
-      rawP75: p75,
-      rawP90: p90,
-      rawP95: p95,
-    };
-  });
-
-  const yTicks = [21, 22, 23, 24, 25, 26, 27, 28].map(toPlot);
-
-  /* Recharts measures the screen box; force a reflow so print uses page width */
-  useEffect(() => {
-    const relayout = () => window.dispatchEvent(new Event("resize"));
-    window.addEventListener("beforeprint", relayout);
-    return () => window.removeEventListener("beforeprint", relayout);
-  }, []);
+  const { data, yTicks, xTicks, chartAgeMin, chartAgeMax } =
+    buildPercentileSeries(ethnicity, sex, age);
 
   return (
     <div className="w-full">
-      {/* Screen legend (color + shapes) */}
-      <div className="print-chart-screen-legend mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-1">
+      <div className="mb-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 px-1">
         {LEGEND_ITEMS.map((item) => (
           <span
             key={item.key}
@@ -263,59 +210,24 @@ export function PercentileChart({
         </span>
       </div>
 
-      {/* Print-only B&W line-style legend */}
-      <div className="print-legend-bw hidden">
-        <span>
-          <strong>P5</strong> solid
-        </span>
-        <span>
-          <strong>P25</strong> dash
-        </span>
-        <span>
-          <strong>P50</strong> thick solid
-        </span>
-        <span>
-          <strong>P75</strong> dash
-        </span>
-        <span>
-          <strong>P90</strong> solid
-        </span>
-        <span>
-          <strong>P95</strong> solid
-        </span>
-        <span>
-          <strong>26 mm</strong> long-dash
-        </span>
-        <span>
-          <strong>● OD / OS</strong> measured points
-        </span>
-      </div>
-
-      <div className="print-chart h-[420px] sm:h-[480px]">
+      <div className="h-[420px] sm:h-[480px]">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
-            /* Room for axis titles + OD/OS@18 labels so print never clips */
-            margin={{ top: 18, right: 78, left: 36, bottom: 42 }}
+            margin={{ top: 16, right: 56, left: 12, bottom: 28 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
             <XAxis
               dataKey="age"
               type="number"
               domain={[chartAgeMin, chartAgeMax]}
-              ticks={
-                chartAgeMin < 6
-                  ? [chartAgeMin, 6, 8, 10, 12, 14, 16, 18].filter(
-                      (t, i, a) => a.indexOf(t) === i && t >= chartAgeMin
-                    )
-                  : [6, 8, 10, 12, 14, 16, 18]
-              }
+              ticks={xTicks}
               tick={{ fill: "#475569", fontSize: 12 }}
               tickMargin={6}
               label={{
                 value: "Age (years)",
                 position: "insideBottom",
-                offset: -28,
+                offset: -16,
                 fill: "#64748b",
               }}
             />
@@ -324,13 +236,10 @@ export function PercentileChart({
               ticks={yTicks}
               tickFormatter={(v: number) => String(v + Y_MIN)}
               tick={{ fill: "#475569", fontSize: 12 }}
-              tickMargin={4}
-              width={48}
               label={{
                 value: "Axial length (mm)",
                 angle: -90,
                 position: "insideLeft",
-                offset: 8,
                 style: { textAnchor: "middle", fill: "#64748b" },
               }}
             />
@@ -519,7 +428,7 @@ export function PercentileChart({
         </ResponsiveContainer>
       </div>
 
-      <div className="print-chart-bands-legend mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
+      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-600">
         <span className="font-medium text-slate-700">Bands:</span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2.5 w-3 rounded-sm bg-green-400" />

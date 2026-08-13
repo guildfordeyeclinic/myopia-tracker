@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BennettLensPower } from "@/components/BennettLensPower";
 import { InsightCards } from "@/components/InsightCards";
 import {
@@ -8,7 +8,7 @@ import {
   type FormValues,
 } from "@/components/MeasurementForm";
 import { PercentileChart } from "@/components/PercentileChart";
-import { PrintSummary } from "@/components/PrintSummary";
+import { PrintReport, printGraph } from "@/components/PrintReport";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CLINIC_NAME, CLINIC_URL, getReference } from "@/data/references";
@@ -138,6 +138,18 @@ export default function HomePage() {
     setResult(out);
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!result) return;
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        printGraph(result);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [result]);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <SiteHeader />
@@ -167,14 +179,13 @@ export default function HomePage() {
           </aside>
 
           <section className="space-y-4">
-            {/* Only this block is printed */}
-            <div className="print-sheet rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
               <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                 <div>
-                  <h2 className="print-sheet-title text-base font-semibold text-slate-900">
+                  <h2 className="text-base font-semibold text-slate-900">
                     Axial length percentile graph
                   </h2>
-                  <p className="print-sheet-meta text-xs text-slate-500">
+                  <p className="text-xs text-slate-500">
                     {result
                       ? `${ref.label} · ${result.input.sex === "male" ? "Male" : "Female"} · age ${result.ageClamped}`
                       : "Enter values and click Show on graph"}
@@ -183,11 +194,8 @@ export default function HomePage() {
                 {result && (
                   <button
                     type="button"
-                    onClick={() => {
-                      window.dispatchEvent(new Event("resize"));
-                      requestAnimationFrame(() => window.print());
-                    }}
-                    className="no-print rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                    onClick={() => printGraph(result)}
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   >
                     Print graph
                   </button>
@@ -195,31 +203,24 @@ export default function HomePage() {
               </div>
 
               {result ? (
-                <>
-                  <PercentileChart
-                    age={result.ageClamped}
-                    sex={result.input.sex}
-                    ethnicity={result.input.ethnicity}
-                    alOd={result.input.alOd}
-                    alOs={result.input.alOs}
-                    untreatedOd={result.od.untreatedAlAt18}
-                    untreatedOs={result.os.untreatedAlAt18}
-                  />
-                  <PrintSummary result={result} />
-                </>
+                <PercentileChart
+                  age={result.ageClamped}
+                  sex={result.input.sex}
+                  ethnicity={result.input.ethnicity}
+                  alOd={result.input.alOd}
+                  alOs={result.input.alOs}
+                  untreatedOd={result.od.untreatedAlAt18}
+                  untreatedOs={result.os.untreatedAlAt18}
+                />
               ) : (
-                <div className="no-print flex h-[360px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-500">
+                <div className="flex h-[360px] items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-center text-sm text-slate-500">
                   Your OD / OS points will appear on the ethnicity- and
                   sex-specific growth chart here.
                 </div>
               )}
             </div>
 
-            {result && (
-              <div className="print-insights-screen no-print">
-                <InsightCards result={result} />
-              </div>
-            )}
+            {result && <InsightCards result={result} />}
           </section>
         </div>
 
@@ -301,6 +302,7 @@ export default function HomePage() {
         </div>
       </main>
 
+      {result && <PrintReport result={result} />}
       <SiteFooter />
     </div>
   );
