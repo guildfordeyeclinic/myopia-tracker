@@ -183,7 +183,10 @@ export default function HomePage() {
                 {result && (
                   <button
                     type="button"
-                    onClick={() => window.print()}
+                    onClick={() => {
+                      window.dispatchEvent(new Event("resize"));
+                      requestAnimationFrame(() => window.print());
+                    }}
                     className="no-print rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
                   >
                     Print graph

@@ -43,7 +43,7 @@ export function PrintSummary({ result }: { result: AnalysisResult }) {
           <span> · under-6 estimate (extrapolated)</span>
         )}
       </div>
-      <div className="print-summary-grid grid grid-cols-2 gap-2">
+      <div className="print-summary-grid">
         <EyeLines eye={result.od} />
         <EyeLines eye={result.os} />
       </div>

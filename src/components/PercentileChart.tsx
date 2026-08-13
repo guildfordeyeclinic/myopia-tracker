@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import {
   Area,
   CartesianGrid,
@@ -232,6 +233,13 @@ export function PercentileChart({
 
   const yTicks = [21, 22, 23, 24, 25, 26, 27, 28].map(toPlot);
 
+  /* Recharts measures the screen box; force a reflow so print uses page width */
+  useEffect(() => {
+    const relayout = () => window.dispatchEvent(new Event("resize"));
+    window.addEventListener("beforeprint", relayout);
+    return () => window.removeEventListener("beforeprint", relayout);
+  }, []);
+
   return (
     <div className="w-full">
       {/* Screen legend (color + shapes) */}
@@ -287,8 +295,8 @@ export function PercentileChart({
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}
-            /* Extra right margin so OD/OS@18 labels are not clipped in print */
-            margin={{ top: 16, right: 72, left: 12, bottom: 20 }}
+            /* Room for axis titles + OD/OS@18 labels so print never clips */
+            margin={{ top: 18, right: 78, left: 36, bottom: 42 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" />
             <XAxis
@@ -303,10 +311,11 @@ export function PercentileChart({
                   : [6, 8, 10, 12, 14, 16, 18]
               }
               tick={{ fill: "#475569", fontSize: 12 }}
+              tickMargin={6}
               label={{
                 value: "Age (years)",
                 position: "insideBottom",
-                offset: -4,
+                offset: -28,
                 fill: "#64748b",
               }}
             />
@@ -315,10 +324,13 @@ export function PercentileChart({
               ticks={yTicks}
               tickFormatter={(v: number) => String(v + Y_MIN)}
               tick={{ fill: "#475569", fontSize: 12 }}
+              tickMargin={4}
+              width={48}
               label={{
                 value: "Axial length (mm)",
                 angle: -90,
                 position: "insideLeft",
+                offset: 8,
                 style: { textAnchor: "middle", fill: "#64748b" },
               }}
             />
