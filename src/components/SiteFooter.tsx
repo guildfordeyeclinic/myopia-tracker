@@ -19,6 +19,12 @@ export function SiteFooter() {
           >
             About
           </Link>
+          <Link
+            href="/bennett"
+            className="font-medium text-teal-800 hover:underline"
+          >
+            Bennett buffer
+          </Link>
           <a
             href={CLINIC_URL}
             target="_blank"

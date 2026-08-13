@@ -34,14 +34,12 @@ export function SiteHeader({
             >
               About
             </Link>
-            <a
-              href={CLINIC_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-medium text-slate-600 hover:underline"
+            <Link
+              href="/bennett"
+              className="font-medium text-teal-800 hover:underline"
             >
-              {CLINIC_NAME}
-            </a>
+              Bennett buffer
+            </Link>
           </nav>
         </div>
         <a

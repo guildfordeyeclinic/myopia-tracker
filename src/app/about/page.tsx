@@ -289,8 +289,12 @@ export default function AboutPage() {
               buffering bands when corneal radius and lens thickness are entered
             </li>
             <li>
-              Separate <strong>modified Bennett lens power</strong> section
-              (cycloplegic SE, ACD, LT, AL, mean K)
+              Separate{" "}
+              <Link href="/bennett" className="text-teal-800 underline">
+                modified Bennett lens power
+              </Link>{" "}
+              page with age-adjusted buffer minima (cycloplegic SE, ACD, LT, AL,
+              mean K)
             </li>
             <li>
               <strong>Print graph</strong> mode for B&W clinic printers (graph +
