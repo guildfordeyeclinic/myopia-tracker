@@ -3,6 +3,7 @@ import {
   bennettLensPower,
   classifyLensPower,
   kDioptersToRadiusMm,
+  lensPowerAgeRule,
   seToCornealPlane,
 } from "./bennett";
 
@@ -100,14 +101,41 @@ describe("Hernandez modified Bennett (PMC4646557 appendix §6.1)", () => {
   });
 });
 
-describe("lens power clinical bands", () => {
-  it("classifies normal, low, buffer gone, and high", () => {
-    expect(classifyLensPower(22)).toBe("normal");
-    expect(classifyLensPower(20)).toBe("normal");
-    expect(classifyLensPower(24)).toBe("normal");
-    expect(classifyLensPower(18)).toBe("low");
-    expect(classifyLensPower(16)).toBe("buffer_gone");
-    expect(classifyLensPower(14)).toBe("buffer_gone");
-    expect(classifyLensPower(25)).toBe("high");
+describe("age-stratified buffer thresholds", () => {
+  it("uses +18.5 D for ages 6–9", () => {
+    expect(lensPowerAgeRule(7).thresholdD).toBe(18.5);
+    expect(lensPowerAgeRule(6).thresholdD).toBe(18.5);
+    expect(lensPowerAgeRule(9.5).thresholdD).toBe(18.5);
+    expect(classifyLensPower(18.0, 7)).toBe("buffer_gone");
+    expect(classifyLensPower(18.5, 8)).toBe("buffer_gone");
+    expect(classifyLensPower(19.0, 8)).toBe("low");
+    expect(classifyLensPower(22.0, 8)).toBe("normal");
+    expect(classifyLensPower(24.0, 8)).toBe("high");
+  });
+
+  it("uses +17.0 D for ages 10–13", () => {
+    expect(lensPowerAgeRule(10).thresholdD).toBe(17.0);
+    expect(lensPowerAgeRule(13.9).thresholdD).toBe(17.0);
+    expect(classifyLensPower(16.5, 12)).toBe("buffer_gone");
+    expect(classifyLensPower(17.0, 12)).toBe("buffer_gone");
+    expect(classifyLensPower(18.0, 12)).toBe("low");
+    expect(classifyLensPower(22.0, 12)).toBe("normal");
+  });
+
+  it("uses +15.5 D for ages 14–18", () => {
+    expect(lensPowerAgeRule(14).thresholdD).toBe(15.5);
+    expect(lensPowerAgeRule(16).thresholdD).toBe(15.5);
+    expect(lensPowerAgeRule(18).thresholdD).toBe(15.5);
+    expect(classifyLensPower(15.5, 16)).toBe("buffer_gone");
+    expect(classifyLensPower(16.0, 16)).toBe("low");
+    expect(classifyLensPower(22.0, 16)).toBe("normal");
+    expect(classifyLensPower(25.0, 16)).toBe("high");
+  });
+
+  it("maps under-6 to the 6–9 threshold and over-18 to the 14–18 floor", () => {
+    expect(lensPowerAgeRule(5).thresholdD).toBe(18.5);
+    expect(lensPowerAgeRule(21).thresholdD).toBe(15.5);
+    expect(classifyLensPower(18.0, 5)).toBe("buffer_gone");
+    expect(classifyLensPower(16.0, 21)).toBe("low");
   });
 });

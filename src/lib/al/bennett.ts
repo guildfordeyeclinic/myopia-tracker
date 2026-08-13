@@ -192,59 +192,143 @@ function round3(n: number) {
   return Math.round(n * 1000) / 1000;
 }
 
-/** Typical relaxed crystalline lens power band (clinical teaching range) */
+/** Fallback typical band when age is 10+ (clinic teaching range) */
 export const LENS_POWER_NORMAL_MIN_D = 20;
 export const LENS_POWER_NORMAL_MAX_D = 24;
-/** At or below this, residual “buffering” from lens power is considered gone */
-export const LENS_POWER_BUFFER_GONE_D = 16;
 
-export type LensPowerBand =
-  | "buffer_gone"
-  | "low"
-  | "normal"
-  | "high";
+export type LensPowerAgeBand = "under_6" | "6_9" | "10_13" | "14_18" | "over_18";
 
-export function classifyLensPower(lensPowerD: number): LensPowerBand {
-  if (lensPowerD <= LENS_POWER_BUFFER_GONE_D) return "buffer_gone";
-  if (lensPowerD < LENS_POWER_NORMAL_MIN_D) return "low";
-  if (lensPowerD <= LENS_POWER_NORMAL_MAX_D) return "normal";
+export interface AgeBufferRule {
+  band: LensPowerAgeBand;
+  /** Short age-group label shown in the UI */
+  label: string;
+  /** Buffer depleted if Bennett power is at or below this (D) */
+  thresholdD: number;
+  typicalMinD: number;
+  typicalMaxD: number;
+  clinicalNote: string;
+}
+
+/**
+ * Age-stratified remaining-buffer thresholds.
+ * Younger eyes should still have higher lens power; a low Bennett value
+ * at that age means the reserve was used early.
+ */
+export function lensPowerAgeRule(ageYears: number): AgeBufferRule {
+  if (ageYears < 6) {
+    return {
+      band: "under_6",
+      label: "Under 6 (using 6–9 threshold)",
+      thresholdD: 18.5,
+      typicalMinD: 21,
+      typicalMaxD: 23,
+      clinicalNote:
+        "Children this young should still have high lens power. The 6–9 depleted threshold (≤ +18.5 D) is applied as a conservative floor.",
+    };
+  }
+  if (ageYears < 10) {
+    return {
+      band: "6_9",
+      label: "Ages 6–9",
+      thresholdD: 18.5,
+      typicalMinD: 21,
+      typicalMaxD: 23,
+      clinicalNote:
+        "Lens power is typically about +21.0 to +23.0 D at this age. A value already at or below +18.5 D suggests the child has used lens reserve early to compensate for axial stretch.",
+    };
+  }
+  if (ageYears < 14) {
+    return {
+      band: "10_13",
+      label: "Ages 10–13",
+      thresholdD: 17.0,
+      typicalMinD: LENS_POWER_NORMAL_MIN_D,
+      typicalMaxD: LENS_POWER_NORMAL_MAX_D,
+      clinicalNote:
+        "The eye is approaching intermediate structural maturation. Remaining lens buffer is nearing exhaustion at or below +17.0 D.",
+    };
+  }
+  if (ageYears <= 18) {
+    return {
+      band: "14_18",
+      label: "Ages 14–18",
+      thresholdD: 15.5,
+      typicalMinD: LENS_POWER_NORMAL_MIN_D,
+      typicalMaxD: LENS_POWER_NORMAL_MAX_D,
+      clinicalNote:
+        "This is the usual biological floor of the human crystalline lens. Further flattening below +15.5 D is not expected.",
+    };
+  }
+  return {
+    band: "over_18",
+    label: "Over 18 (using 14–18 floor)",
+    thresholdD: 15.5,
+    typicalMinD: LENS_POWER_NORMAL_MIN_D,
+    typicalMaxD: LENS_POWER_NORMAL_MAX_D,
+    clinicalNote:
+      "Adult eyes are interpreted with the 14–18 biological floor (≤ +15.5 D).",
+  };
+}
+
+export type LensPowerBand = "buffer_gone" | "low" | "normal" | "high";
+
+export function classifyLensPower(
+  lensPowerD: number,
+  ageYears: number
+): LensPowerBand {
+  const rule = lensPowerAgeRule(ageYears);
+  if (lensPowerD <= rule.thresholdD) return "buffer_gone";
+  if (lensPowerD < rule.typicalMinD) return "low";
+  if (lensPowerD <= rule.typicalMaxD) return "normal";
   return "high";
 }
 
-export function lensPowerInterpretation(lensPowerD: number): {
+export function lensPowerInterpretation(
+  lensPowerD: number,
+  ageYears: number
+): {
   band: LensPowerBand;
+  rule: AgeBufferRule;
   label: string;
   detail: string;
   tone: "red" | "amber" | "green" | "slate";
 } {
-  const band = classifyLensPower(lensPowerD);
+  const rule = lensPowerAgeRule(ageYears);
+  const band = classifyLensPower(lensPowerD, ageYears);
+  const thr = `+${rule.thresholdD.toFixed(1)} D`;
+  const typical = `+${rule.typicalMinD.toFixed(0)} to +${rule.typicalMaxD.toFixed(0)} D`;
+
   switch (band) {
     case "buffer_gone":
       return {
         band,
-        label: "Buffering gone",
-        detail: `Lens power ≤ ${LENS_POWER_BUFFER_GONE_D} D — residual crystalline-lens buffering is considered gone (typical normal range is about +${LENS_POWER_NORMAL_MIN_D} to +${LENS_POWER_NORMAL_MAX_D} D).`,
+        rule,
+        label: "Buffer depleted",
+        detail: `${rule.label}: Bennett power ≤ ${thr}. ${rule.clinicalNote}`,
         tone: "red",
       };
     case "low":
       return {
         band,
-        label: "Below typical range",
-        detail: `Below the usual about +${LENS_POWER_NORMAL_MIN_D} to +${LENS_POWER_NORMAL_MAX_D} D band. At ≤ ${LENS_POWER_BUFFER_GONE_D} D, buffering is considered gone.`,
+        rule,
+        label: "Below typical for age",
+        detail: `${rule.label}: below the usual ${typical} band, but still above the depleted threshold (${thr}). ${rule.clinicalNote}`,
         tone: "amber",
       };
     case "normal":
       return {
         band,
-        label: "Typical range",
-        detail: `Within the usual about +${LENS_POWER_NORMAL_MIN_D} to +${LENS_POWER_NORMAL_MAX_D} D band for natural crystalline lens power.`,
+        rule,
+        label: "Typical for age",
+        detail: `${rule.label}: within the usual ${typical} band. Buffer is considered depleted only at ≤ ${thr}.`,
         tone: "green",
       };
     case "high":
       return {
         band,
-        label: "Above typical range",
-        detail: `Above the usual about +${LENS_POWER_NORMAL_MIN_D} to +${LENS_POWER_NORMAL_MAX_D} D band.`,
+        rule,
+        label: "Above typical for age",
+        detail: `${rule.label}: above the usual ${typical} band. Buffer is considered depleted only at ≤ ${thr}.`,
         tone: "slate",
       };
   }

@@ -150,7 +150,7 @@ const jsonLd = {
           name: "What is Bennett crystalline lens power used for?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Bennett’s method (and modifications such as Hernandez et al.) estimates absolute crystalline lens power from refraction and biometry (AL, ACD, LT, keratometry) without phakometry. Typical natural lens power is often discussed around +20 to +24 D in educational framing.",
+            text: "Bennett’s method (and modifications such as Hernandez et al.) estimates absolute crystalline lens power from refraction and biometry (AL, ACD, LT, keratometry) without phakometry. Remaining buffer is judged with age-adjusted minima: ≤ +18.5 D at ages 6–9, ≤ +17.0 D at 10–13, and ≤ +15.5 D at 14–18.",
           },
         },
       ],
@@ -344,9 +344,10 @@ export default function AboutPage() {
               (clinic teaching bands on this site)
             </li>
             <li>
-              <strong>Crystalline lens power:</strong> typical natural lens
-              power often framed around <strong>+20 to +24 D</strong>; ≤ +16 D
-              framed as buffering gone on this tool
+              <strong>Crystalline lens power:</strong> remaining buffer is
+              judged with age-adjusted Bennett minima — ages 6–9 depleted at ≤
+              +18.5 D (typical ~+21 to +23 D); ages 10–13 at ≤ +17.0 D; ages
+              14–18 at ≤ +15.5 D (biological floor)
             </li>
           </ul>
 

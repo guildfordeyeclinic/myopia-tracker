@@ -225,7 +225,7 @@ export default function HomePage() {
         </div>
 
         <div className="no-print mt-8">
-          <BennettLensPower />
+          <BennettLensPower chartAge={form.age} />
         </div>
 
         <section className="no-print mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 leading-relaxed shadow-sm">
@@ -274,7 +274,9 @@ export default function HomePage() {
                 2015;6(11):4501–4515
               </a>{" "}
               (PMC4646557). Based on Bennett AG (1988); thin-lens position and{" "}
-              <em>b</em> coefficient per Eqs. 16–18.
+              <em>b</em> coefficient per Eqs. 16–18. Remaining buffer is judged
+              with age-adjusted minima (≤ +18.5 D at 6–9 years, ≤ +17.0 D at
+              10–13, ≤ +15.5 D at 14–18).
             </li>
           </ul>
           <p className="mt-3 text-xs text-slate-500">

@@ -1,13 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   bennettLensPower,
   kDioptersToRadiusMm,
+  lensPowerAgeRule,
   lensPowerInterpretation,
-  LENS_POWER_BUFFER_GONE_D,
-  LENS_POWER_NORMAL_MAX_D,
-  LENS_POWER_NORMAL_MIN_D,
   type BennettResult,
 } from "@/lib/al/bennett";
 
@@ -103,12 +101,14 @@ function parseEye(
 function ResultCard({
   label,
   result,
+  ageYears,
 }: {
   label: string;
   result: BennettResult | null;
+  ageYears: number;
 }) {
   if (!result) return null;
-  const interp = lensPowerInterpretation(result.lensPowerD);
+  const interp = lensPowerInterpretation(result.lensPowerD, ageYears);
   const toneClass =
     interp.tone === "red"
       ? "border-red-300 bg-red-50"
@@ -141,6 +141,10 @@ function ResultCard({
       </p>
       <div className={`mt-3 rounded-lg px-3 py-2 text-sm ${badgeClass}`}>
         <p className="font-semibold">{interp.label}</p>
+        <p className="mt-0.5 text-xs font-medium opacity-90">
+          {interp.rule.label} · depleted if ≤ +{interp.rule.thresholdD.toFixed(1)}{" "}
+          D
+        </p>
         <p className="mt-0.5 leading-relaxed opacity-95">{interp.detail}</p>
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-600">
@@ -266,7 +270,8 @@ function EyeFields({
   );
 }
 
-export function BennettLensPower() {
+export function BennettLensPower({ chartAge = "" }: { chartAge?: string }) {
+  const [age, setAge] = useState(chartAge);
   const [od, setOd] = useState<EyeForm>(emptyEye);
   const [os, setOs] = useState<EyeForm>(emptyEye);
   const [kMode, setKMode] = useState<"radius" | "diopters">("radius");
@@ -274,7 +279,17 @@ export function BennettLensPower() {
   const [results, setResults] = useState<{
     od: BennettResult | null;
     os: BennettResult | null;
+    ageYears: number;
   } | null>(null);
+
+  useEffect(() => {
+    if (chartAge.trim() !== "") setAge(chartAge);
+  }, [chartAge]);
+
+  const parsedAge = Number(age);
+  const ageRule = Number.isFinite(parsedAge)
+    ? lensPowerAgeRule(parsedAge)
+    : null;
 
   const fieldFilled = (x: string | undefined | null) =>
     (x ?? "").trim() !== "";
@@ -308,8 +323,26 @@ export function BennettLensPower() {
     return { result };
   };
 
+  const parseAgeYears = (): number | { error: string } => {
+    const n = Number(age);
+    if (!Number.isFinite(n) || age.trim() === "") {
+      return { error: "Enter age in years for the age-adjusted buffer threshold." };
+    }
+    if (n < 3 || n > 25) {
+      return { error: "Age should be about 3–25 years for this pediatric buffer scale." };
+    }
+    return n;
+  };
+
   const calculate = () => {
     setError(null);
+    const ageOut = parseAgeYears();
+    if (typeof ageOut !== "number") {
+      setError(ageOut.error);
+      setResults(null);
+      return;
+    }
+
     const odFilled = [od.se, od.al, od.acd, od.lt, od.k].every(fieldFilled);
     const osFilled = [os.se, os.al, os.acd, os.lt, os.k].every(fieldFilled);
 
@@ -341,11 +374,12 @@ export function BennettLensPower() {
       osResult = out.result;
     }
 
-    setResults({ od: odResult, os: osResult });
+    setResults({ od: odResult, os: osResult, ageYears: ageOut });
   };
 
   const loadDemo = () => {
-    // Near appendix subject 1-OD style demo (myopic adult biometry)
+    // Near appendix subject 1-OD style demo; age 16 uses the 14–18 floor
+    const demoAge = "16";
     const demoOd: EyeForm = {
       se: "-3.75",
       al: "26.01",
@@ -363,6 +397,7 @@ export function BennettLensPower() {
       cct: "0.48",
     };
     setKMode("radius");
+    setAge(demoAge);
     setOd(demoOd);
     setOs(demoOs);
     setError(null);
@@ -373,6 +408,7 @@ export function BennettLensPower() {
       setResults({
         od: bennettLensPower(odP),
         os: bennettLensPower(osP),
+        ageYears: 16,
       });
     }
   };
@@ -387,7 +423,8 @@ export function BennettLensPower() {
           <p className="mt-1 text-sm text-slate-600">
             Hernandez et al. modification of Bennett’s method — crystalline lens
             power from cycloplegic refraction, ACD, LT, AL, and mean
-            keratometry.
+            keratometry. Remaining buffer is judged with an age-adjusted
+            minimum, not a single +16 D cutoff.
           </p>
         </div>
         <select
@@ -398,6 +435,28 @@ export function BennettLensPower() {
           <option value="radius">Mean K as radius (mm)</option>
           <option value="diopters">Mean K as power (D)</option>
         </select>
+      </div>
+
+      <div className="mt-5 max-w-xs">
+        <label className="mb-0.5 block text-xs font-medium text-slate-600">
+          Age (years)
+        </label>
+        <input
+          type="number"
+          min={3}
+          max={25}
+          step={0.1}
+          value={age}
+          onChange={(e) => setAge(e.target.value)}
+          placeholder="e.g. 9.5"
+          className={inputClass}
+        />
+        {ageRule && Number.isFinite(parsedAge) && age.trim() !== "" && (
+          <p className="mt-1 text-xs text-slate-500">
+            {ageRule.label}: buffer depleted at ≤ +{ageRule.thresholdD.toFixed(1)}{" "}
+            D
+          </p>
+        )}
       </div>
 
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
@@ -440,8 +499,16 @@ export function BennettLensPower() {
 
       {results && (
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <ResultCard label="Right eye (OD)" result={results.od} />
-          <ResultCard label="Left eye (OS)" result={results.os} />
+          <ResultCard
+            label="Right eye (OD)"
+            result={results.od}
+            ageYears={results.ageYears}
+          />
+          <ResultCard
+            label="Left eye (OS)"
+            result={results.os}
+            ageYears={results.ageYears}
+          />
         </div>
       )}
 
@@ -474,15 +541,24 @@ export function BennettLensPower() {
           theoretical accuracy ≈ ±0.5 D for relaxed eyes (−10 to +10 D).
         </p>
         <p className="mt-1">
-          <strong className="text-slate-800">Interpretation guide:</strong>{" "}
-          typical natural lens power is about{" "}
-          <strong>
-            +{LENS_POWER_NORMAL_MIN_D} to +{LENS_POWER_NORMAL_MAX_D} D
-          </strong>
-          . If power is{" "}
-          <strong>≤ +{LENS_POWER_BUFFER_GONE_D} D</strong>, residual
-          crystalline-lens buffering is considered gone.
+          <strong className="text-slate-800">Age-adjusted buffer minimums:</strong>{" "}
+          remaining lens reserve is judged against the child’s developmental
+          stage, not a single +16.0 D cutoff.
         </p>
+        <ul className="mt-1 list-disc space-y-0.5 pl-4">
+          <li>
+            <strong>Ages 6–9:</strong> depleted if ≤ +18.5 D (typical ~+21 to
+            +23 D). A 7-year-old already at +18 D has used reserve early.
+          </li>
+          <li>
+            <strong>Ages 10–13:</strong> depleted if ≤ +17.0 D — buffer nearing
+            exhaustion as the eye matures.
+          </li>
+          <li>
+            <strong>Ages 14–18:</strong> depleted if ≤ +15.5 D — usual biological
+            floor; the lens is not expected to flatten further.
+          </li>
+        </ul>
       </div>
     </section>
   );
