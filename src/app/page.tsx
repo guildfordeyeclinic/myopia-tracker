@@ -8,26 +8,15 @@ import {
   type FormValues,
 } from "@/components/MeasurementForm";
 import { PercentileChart } from "@/components/PercentileChart";
+import { usePatientSession } from "@/components/PatientSessionProvider";
 import { PrintReport, printGraph } from "@/components/PrintReport";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { CLINIC_NAME, CLINIC_URL, getReference } from "@/data/references";
+import { applyHomeForm, toHomeForm } from "@/lib/session/patient";
 import { meanKToRadiusMm } from "@/lib/al/alcr";
 import { analyzeMeasurement } from "@/lib/al/analyze";
 import type { AnalysisResult } from "@/lib/al/types";
-
-const emptyForm: FormValues = {
-  age: "",
-  sex: "male",
-  ethnicity: "east_asian",
-  alOd: "",
-  alOs: "",
-  crMode: "radius",
-  cornealOd: "",
-  cornealOs: "",
-  ltOd: "",
-  ltOs: "",
-};
 
 const demoForm: FormValues = {
   age: "9.5",
@@ -118,7 +107,10 @@ function parseForm(values: FormValues): AnalysisResult | { error: string } {
 }
 
 export default function HomePage() {
-  const [form, setForm] = useState<FormValues>(emptyForm);
+  const { patient, setPatient } = usePatientSession();
+  const form = toHomeForm(patient);
+  const setForm = (next: FormValues) =>
+    setPatient((prev) => applyHomeForm(prev, next));
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 

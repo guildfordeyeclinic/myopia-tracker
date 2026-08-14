@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { usePatientSession } from "@/components/PatientSessionProvider";
 import {
   bennettLensPower,
   kDioptersToRadiusMm,
@@ -8,24 +9,9 @@ import {
   lensPowerInterpretation,
   type BennettResult,
 } from "@/lib/al/bennett";
+import type { EyeFields, KMode } from "@/lib/session/patient";
 
-interface EyeForm {
-  se: string;
-  al: string;
-  acd: string;
-  lt: string;
-  k: string;
-  cct: string;
-}
-
-const emptyEye: EyeForm = {
-  se: "",
-  al: "",
-  acd: "",
-  lt: "",
-  k: "",
-  cct: "",
-};
+type EyeForm = EyeFields;
 
 const inputClass =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600/20";
@@ -270,21 +256,26 @@ function EyeFields({
   );
 }
 
-export function BennettLensPower({ chartAge = "" }: { chartAge?: string }) {
-  const [age, setAge] = useState(chartAge);
-  const [od, setOd] = useState<EyeForm>(emptyEye);
-  const [os, setOs] = useState<EyeForm>(emptyEye);
-  const [kMode, setKMode] = useState<"radius" | "diopters">("radius");
+export function BennettLensPower() {
+  const { patient, setPatient } = usePatientSession();
+  const age = patient.age;
+  const od = patient.od;
+  const os = patient.os;
+  const kMode = patient.kMode;
+  const setAge = (next: string) =>
+    setPatient((prev) => ({ ...prev, age: next }));
+  const setOd = (next: EyeForm) =>
+    setPatient((prev) => ({ ...prev, od: next }));
+  const setOs = (next: EyeForm) =>
+    setPatient((prev) => ({ ...prev, os: next }));
+  const setKMode = (next: KMode) =>
+    setPatient((prev) => ({ ...prev, kMode: next }));
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<{
     od: BennettResult | null;
     os: BennettResult | null;
     ageYears: number;
   } | null>(null);
-
-  useEffect(() => {
-    if (chartAge.trim() !== "") setAge(chartAge);
-  }, [chartAge]);
 
   const parsedAge = Number(age);
   const ageRule = Number.isFinite(parsedAge)
@@ -396,10 +387,13 @@ export function BennettLensPower({ chartAge = "" }: { chartAge?: string }) {
       k: "7.79",
       cct: "0.48",
     };
-    setKMode("radius");
-    setAge(demoAge);
-    setOd(demoOd);
-    setOs(demoOs);
+    setPatient((prev) => ({
+      ...prev,
+      age: demoAge,
+      kMode: "radius",
+      od: demoOd,
+      os: demoOs,
+    }));
     setError(null);
 
     const odP = parseEye(demoOd, "radius", "OD");
