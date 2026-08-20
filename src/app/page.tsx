@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { InsightCards } from "@/components/InsightCards";
+import { MyopiaTypesExplainer } from "@/components/MyopiaTypesExplainer";
 import {
   MeasurementForm,
   type FormValues,
@@ -215,6 +216,8 @@ export default function HomePage() {
             {result && <InsightCards result={result} />}
           </section>
         </div>
+
+        <MyopiaTypesExplainer />
 
         <section className="no-print mt-8 rounded-2xl border border-slate-200 bg-white p-5 text-sm text-slate-600 leading-relaxed shadow-sm">
           <h2 className="text-base font-semibold text-slate-900">
