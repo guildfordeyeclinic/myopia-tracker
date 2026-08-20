@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { KeratometryInputs } from "@/components/KeratometryInputs";
 import { usePatientSession } from "@/components/PatientSessionProvider";
 import {
   bennettLensPower,
@@ -225,17 +226,23 @@ function EyeFields({
             className={inputClass}
           />
         </div>
-        <div>
-          <label className="mb-0.5 block text-xs text-slate-600">
-            Mean K ({kMode === "radius" ? "mm" : "D"})
-          </label>
-          <input
-            type="number"
-            step={0.01}
-            value={values.k}
-            onChange={(e) => set("k", e.target.value)}
-            placeholder={kMode === "radius" ? "e.g. 7.80" : "e.g. 43.25"}
-            className={inputClass}
+        <div className="col-span-2 sm:col-span-3">
+          <p className="mb-1 text-xs text-slate-600">
+            Keratometry — steep + flat auto-fills mean, or type mean only
+          </p>
+          <KeratometryInputs
+            steep={values.kSteep}
+            flat={values.kFlat}
+            mean={values.k}
+            unit={kMode === "radius" ? "mm" : "D"}
+            onChange={({ steep, flat, mean }) =>
+              onChange({
+                ...values,
+                kSteep: steep,
+                kFlat: flat,
+                k: mean,
+              })
+            }
           />
         </div>
         <div>
@@ -292,18 +299,7 @@ export function BennettLensPower() {
   }, [od, os]);
 
   const runEye = (eye: EyeForm, label: string) => {
-    const p = parseEye(
-      {
-        se: eye.se ?? "",
-        al: eye.al ?? "",
-        acd: eye.acd ?? "",
-        lt: eye.lt ?? "",
-        k: eye.k ?? "",
-        cct: eye.cct ?? "",
-      },
-      kMode,
-      label
-    );
+    const p = parseEye(eye, kMode, label);
     if ("error" in p) return p;
     const result = bennettLensPower(p);
     if (!result) {
@@ -377,6 +373,8 @@ export function BennettLensPower() {
       acd: "4.27",
       lt: "3.44",
       k: "7.74",
+      kSteep: "",
+      kFlat: "",
       cct: "0.49",
     };
     const demoOs: EyeForm = {
@@ -385,6 +383,8 @@ export function BennettLensPower() {
       acd: "4.25",
       lt: "3.43",
       k: "7.79",
+      kSteep: "",
+      kFlat: "",
       cct: "0.48",
     };
     setPatient((prev) => ({

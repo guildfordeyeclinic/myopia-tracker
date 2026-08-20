@@ -1,5 +1,6 @@
 "use client";
 
+import { KeratometryInputs } from "@/components/KeratometryInputs";
 import type { Ethnicity, Sex } from "@/lib/al/types";
 
 export interface FormValues {
@@ -11,6 +12,10 @@ export interface FormValues {
   crMode: "radius" | "k";
   cornealOd: string;
   cornealOs: string;
+  cornealSteepOd: string;
+  cornealFlatOd: string;
+  cornealSteepOs: string;
+  cornealFlatOs: string;
   ltOd: string;
   ltOs: string;
 }
@@ -184,27 +189,42 @@ export function MeasurementForm({ values, onChange, onSubmit, onDemo }: Props) {
           <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-slate-500">
             Corneal curvature
           </p>
-          <div className="grid grid-cols-2 gap-2">
+          <p className="mb-2 text-xs text-slate-500">
+            Enter steep and flat to auto-fill mean, or type mean K only.
+          </p>
+          <div className="space-y-3">
             <div>
-              <label className="block text-xs text-slate-600 mb-0.5">OD</label>
-              <input
-                type="number"
-                step={0.01}
-                value={values.cornealOd}
-                onChange={(e) => set("cornealOd", e.target.value)}
-                placeholder={values.crMode === "radius" ? "mm" : "D"}
-                className={inputClass}
+              <p className="mb-1 text-xs font-medium text-slate-600">OD</p>
+              <KeratometryInputs
+                steep={values.cornealSteepOd}
+                flat={values.cornealFlatOd}
+                mean={values.cornealOd}
+                unit={values.crMode === "radius" ? "mm" : "D"}
+                onChange={({ steep, flat, mean }) =>
+                  onChange({
+                    ...values,
+                    cornealSteepOd: steep,
+                    cornealFlatOd: flat,
+                    cornealOd: mean,
+                  })
+                }
               />
             </div>
             <div>
-              <label className="block text-xs text-slate-600 mb-0.5">OS</label>
-              <input
-                type="number"
-                step={0.01}
-                value={values.cornealOs}
-                onChange={(e) => set("cornealOs", e.target.value)}
-                placeholder={values.crMode === "radius" ? "mm" : "D"}
-                className={inputClass}
+              <p className="mb-1 text-xs font-medium text-slate-600">OS</p>
+              <KeratometryInputs
+                steep={values.cornealSteepOs}
+                flat={values.cornealFlatOs}
+                mean={values.cornealOs}
+                unit={values.crMode === "radius" ? "mm" : "D"}
+                onChange={({ steep, flat, mean }) =>
+                  onChange({
+                    ...values,
+                    cornealSteepOs: steep,
+                    cornealFlatOs: flat,
+                    cornealOs: mean,
+                  })
+                }
               />
             </div>
           </div>

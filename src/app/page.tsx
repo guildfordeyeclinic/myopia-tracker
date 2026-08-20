@@ -28,6 +28,10 @@ const demoForm: FormValues = {
   crMode: "radius",
   cornealOd: "7.80",
   cornealOs: "7.78",
+  cornealSteepOd: "",
+  cornealFlatOd: "",
+  cornealSteepOs: "",
+  cornealFlatOs: "",
   ltOd: "3.45",
   ltOs: "3.42",
 };

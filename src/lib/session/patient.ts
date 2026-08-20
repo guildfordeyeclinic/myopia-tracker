@@ -9,6 +9,8 @@ export interface EyeFields {
   al: string;
   lt: string;
   k: string;
+  kSteep: string;
+  kFlat: string;
   se: string;
   acd: string;
   cct: string;
@@ -27,6 +29,8 @@ export const emptyEye: EyeFields = {
   al: "",
   lt: "",
   k: "",
+  kSteep: "",
+  kFlat: "",
   se: "",
   acd: "",
   cct: "",
@@ -52,6 +56,8 @@ function parseEye(raw: unknown): EyeFields {
     al: asString(e.al),
     lt: asString(e.lt),
     k: asString(e.k),
+    kSteep: asString(e.kSteep),
+    kFlat: asString(e.kFlat),
     se: asString(e.se),
     acd: asString(e.acd),
     cct: asString(e.cct),
@@ -107,6 +113,10 @@ export function toHomeForm(p: PatientSession): FormValues {
     crMode: p.kMode === "diopters" ? "k" : "radius",
     cornealOd: p.od.k,
     cornealOs: p.os.k,
+    cornealSteepOd: p.od.kSteep,
+    cornealFlatOd: p.od.kFlat,
+    cornealSteepOs: p.os.kSteep,
+    cornealFlatOs: p.os.kFlat,
     ltOd: p.od.lt,
     ltOs: p.os.lt,
   };
@@ -122,7 +132,21 @@ export function applyHomeForm(
     sex: form.sex,
     ethnicity: form.ethnicity,
     kMode: form.crMode === "k" ? "diopters" : "radius",
-    od: { ...prev.od, al: form.alOd, lt: form.ltOd, k: form.cornealOd },
-    os: { ...prev.os, al: form.alOs, lt: form.ltOs, k: form.cornealOs },
+    od: {
+      ...prev.od,
+      al: form.alOd,
+      lt: form.ltOd,
+      k: form.cornealOd,
+      kSteep: form.cornealSteepOd,
+      kFlat: form.cornealFlatOd,
+    },
+    os: {
+      ...prev.os,
+      al: form.alOs,
+      lt: form.ltOs,
+      k: form.cornealOs,
+      kSteep: form.cornealSteepOs,
+      kFlat: form.cornealFlatOs,
+    },
   };
 }
