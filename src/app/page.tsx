@@ -154,9 +154,29 @@ export default function HomePage() {
       <main className="mx-auto max-w-6xl px-4 py-6 sm:py-8">
         <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
           <aside className="no-print rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <h2 className="mb-4 text-base font-semibold text-slate-900">
-              Enter measurement
-            </h2>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-base font-semibold text-slate-900">
+                Enter measurement
+              </h2>
+              <button
+                type="button"
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      "Clear all saved measurement data from this browser?"
+                    )
+                  ) {
+                    return;
+                  }
+                  clearPatient();
+                  setResult(null);
+                  setError(null);
+                }}
+                className="shrink-0 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-800"
+              >
+                Clear data
+              </button>
+            </div>
             <MeasurementForm
               values={form}
               onChange={(next) => {
@@ -166,18 +186,6 @@ export default function HomePage() {
               onDemo={() => {
                 setForm(demoForm);
                 run(demoForm);
-              }}
-              onClear={() => {
-                if (
-                  !window.confirm(
-                    "Clear all saved measurement data from this browser?"
-                  )
-                ) {
-                  return;
-                }
-                clearPatient();
-                setResult(null);
-                setError(null);
               }}
             />
             {error && (

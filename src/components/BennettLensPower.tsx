@@ -421,14 +421,34 @@ export function BennettLensPower() {
             minimum, not a single +16 D cutoff.
           </p>
         </div>
-        <select
-          value={kMode}
-          onChange={(e) => setKMode(e.target.value as "radius" | "diopters")}
-          className="rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
-        >
-          <option value="radius">Mean K as radius (mm)</option>
-          <option value="diopters">Mean K as power (D)</option>
-        </select>
+        <div className="flex shrink-0 items-center gap-2">
+          <select
+            value={kMode}
+            onChange={(e) => setKMode(e.target.value as "radius" | "diopters")}
+            className="rounded border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
+          >
+            <option value="radius">Mean K as radius (mm)</option>
+            <option value="diopters">Mean K as power (D)</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                !window.confirm(
+                  "Clear all saved measurement data from this browser?"
+                )
+              ) {
+                return;
+              }
+              clearPatient();
+              setResults(null);
+              setError(null);
+            }}
+            className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-800"
+          >
+            Clear data
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 max-w-xs">
@@ -482,24 +502,6 @@ export function BennettLensPower() {
           className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Try demo values
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            if (
-              !window.confirm(
-                "Clear all saved measurement data from this browser?"
-              )
-            ) {
-              return;
-            }
-            clearPatient();
-            setResults(null);
-            setError(null);
-          }}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-800"
-        >
-          Clear data
         </button>
       </div>
 

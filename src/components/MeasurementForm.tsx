@@ -25,7 +25,6 @@ interface Props {
   onChange: (next: FormValues) => void;
   onSubmit: () => void;
   onDemo: () => void;
-  onClear: () => void;
 }
 
 const inputClass =
@@ -36,7 +35,6 @@ export function MeasurementForm({
   onChange,
   onSubmit,
   onDemo,
-  onClear,
 }: Props) {
   const set = <K extends keyof FormValues>(key: K, value: FormValues[K]) =>
     onChange({ ...values, [key]: value });
@@ -288,13 +286,6 @@ export function MeasurementForm({
           className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
         >
           Try demo values
-        </button>
-        <button
-          type="button"
-          onClick={onClear}
-          className="rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-800"
-        >
-          Clear data
         </button>
       </div>
     </form>
