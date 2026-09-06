@@ -103,6 +103,23 @@ export function savePatient(patient: PatientSession) {
   }
 }
 
+export function freshPatient(): PatientSession {
+  return {
+    ...emptyPatient,
+    od: { ...emptyEye },
+    os: { ...emptyEye },
+  };
+}
+
+export function clearSavedPatient() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(PATIENT_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function toHomeForm(p: PatientSession): FormValues {
   return {
     age: p.age,

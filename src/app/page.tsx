@@ -112,7 +112,7 @@ function parseForm(values: FormValues): AnalysisResult | { error: string } {
 }
 
 export default function HomePage() {
-  const { patient, setPatient } = usePatientSession();
+  const { patient, setPatient, clearPatient } = usePatientSession();
   const form = toHomeForm(patient);
   const setForm = (next: FormValues) =>
     setPatient((prev) => applyHomeForm(prev, next));
@@ -166,6 +166,18 @@ export default function HomePage() {
               onDemo={() => {
                 setForm(demoForm);
                 run(demoForm);
+              }}
+              onClear={() => {
+                if (
+                  !window.confirm(
+                    "Clear all saved measurement data from this browser?"
+                  )
+                ) {
+                  return;
+                }
+                clearPatient();
+                setResult(null);
+                setError(null);
               }}
             />
             {error && (

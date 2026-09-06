@@ -264,7 +264,7 @@ function EyeFields({
 }
 
 export function BennettLensPower() {
-  const { patient, setPatient } = usePatientSession();
+  const { patient, setPatient, clearPatient } = usePatientSession();
   const age = patient.age;
   const od = patient.od;
   const os = patient.os;
@@ -482,6 +482,24 @@ export function BennettLensPower() {
           className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           Try demo values
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            if (
+              !window.confirm(
+                "Clear all saved measurement data from this browser?"
+              )
+            ) {
+              return;
+            }
+            clearPatient();
+            setResults(null);
+            setError(null);
+          }}
+          className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 hover:border-red-200 hover:bg-red-50 hover:text-red-800"
+        >
+          Clear data
         </button>
       </div>
 

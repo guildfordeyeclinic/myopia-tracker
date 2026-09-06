@@ -9,7 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import {
+  clearSavedPatient,
   emptyPatient,
+  freshPatient,
   loadPatient,
   PATIENT_STORAGE_KEY,
   parsePatient,
@@ -24,6 +26,7 @@ type PatientUpdater =
 const PatientSessionContext = createContext<{
   patient: PatientSession;
   setPatient: (next: PatientUpdater) => void;
+  clearPatient: () => void;
   ready: boolean;
 } | null>(null);
 
@@ -43,7 +46,11 @@ export function PatientSessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
-      if (e.key !== PATIENT_STORAGE_KEY || e.newValue == null) return;
+      if (e.key !== PATIENT_STORAGE_KEY) return;
+      if (e.newValue == null) {
+        setPatientState(freshPatient());
+        return;
+      }
       setPatientState(parsePatient(e.newValue));
     };
     window.addEventListener("storage", onStorage);
@@ -54,8 +61,15 @@ export function PatientSessionProvider({ children }: { children: ReactNode }) {
     setPatientState((prev) => (typeof next === "function" ? next(prev) : next));
   }, []);
 
+  const clearPatient = useCallback(() => {
+    clearSavedPatient();
+    setPatientState(freshPatient());
+  }, []);
+
   return (
-    <PatientSessionContext.Provider value={{ patient, setPatient, ready }}>
+    <PatientSessionContext.Provider
+      value={{ patient, setPatient, clearPatient, ready }}
+    >
       {children}
     </PatientSessionContext.Provider>
   );
